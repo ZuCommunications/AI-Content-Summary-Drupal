@@ -1,0 +1,9 @@
+summary-generator:
+  version: 1.x
+  js:
+    js/summary-generator.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+    - core/drupal.ajax

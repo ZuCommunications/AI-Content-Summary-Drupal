@@ -1,0 +1,218 @@
+<?php
+
+/**
+ * @file
+ * AI Content Summary module.
+ *
+ * This module provides a way to generate AI summaries for content nodes.
+ *
+ * @package Drupal\ai_content_summary
+ * @file
+ */
+
+use Drupal\Core\Ajax\MessageCommand;
+use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Ajax\AlertCommand;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_form_alter().
+ */
+function ai_content_summary_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $config = \Drupal::config('ai_content_summary.settings');
+  $enabled_types = $config->get('enabled_types') ?? [];
+
+  // Check if this is a node form for an enabled content type.
+  if (strpos($form_id, 'node_') === 0 && (strpos($form_id, '_form') !== FALSE)) {
+    // Extract content type from form ID: node_{content_type}_form or
+    // node_{content_type}_edit_form.
+    $node_type = '';
+    if (preg_match('/^node_(.+?)_edit_form$/', $form_id, $matches)) {
+      $node_type = $matches[1];
+    }
+    elseif (preg_match('/^node_(.+?)_form$/', $form_id, $matches)) {
+      $node_type = $matches[1];
+    }
+
+    if (!empty($node_type) && isset($enabled_types[$node_type]) && $enabled_types[$node_type] && \Drupal::currentUser()->hasPermission('generate ai summaries')) {
+      $auto_generate_enabled = $config->get('auto_generate_summary') ?? FALSE;
+
+      // Create help text based on auto-generation setting.
+      $help_text = $auto_generate_enabled
+        ? t('AI will automatically generate a summary when this field is empty and content is saved.')
+        : t('Use the "Generate AI Summary" button to create a summary, or manually enter one. Automatic generation is disabled.');
+
+      if (isset($form['body'])) {
+        $form['body']['widget'][0]['#attached']['library'][] = 'ai_content_summary/summary-generator';
+
+        // Add help text to the body summary field.
+        if (isset($form['body']['widget'][0]['summary'])) {
+          $form['body']['widget'][0]['summary']['#description'] = $help_text;
+        }
+
+        // Add summary generation button.
+        $form['body']['widget'][0]['summary_generation'] = [
+          '#type' => 'button',
+          '#value' => t('Generate AI Summary'),
+          '#attributes' => [
+            'class' => ['ai-summary-generate-button'],
+            'data-field-name' => 'body',
+          ],
+          '#limit_validation_errors' => [],
+          '#ajax' => [
+            'callback' => 'ai_content_summary_generate_summary_ajax',
+            'wrapper' => 'edit-body-0-summary',
+          ],
+        ];
+      }
+    }
+  }
+}
+
+/**
+ * AJAX callback for generating summary.
+ */
+function ai_content_summary_generate_summary_ajax(array &$form, FormStateInterface $form_state) {
+  $response = new AjaxResponse();
+
+  // Get the submitted values.
+  $values = $form_state->getValues();
+
+  // Find the body or content field.
+  $content = '';
+  if (isset($values['body'][0]['value'])) {
+    $content = $values['body'][0]['value'];
+  }
+  elseif (isset($values['field_body'][0]['value'])) {
+    $content = $values['field_body'][0]['value'];
+  }
+
+  if (empty($content)) {
+    $response->addCommand(new AlertCommand(t('No content found to summarize.')));
+    return $response;
+  }
+
+  try {
+    $ai_service = \Drupal::service('ai_content_summary.service');
+    $config = \Drupal::config('ai_content_summary.settings');
+
+    $clean_content = $ai_service->cleanText($content);
+    $summary = $ai_service->generateSummary(
+      $clean_content,
+      $config->get('max_length'),
+      $config->get('min_length')
+    );
+
+    // Add the summary to the appropriate field.
+    if (isset($form['body']['widget'][0]['summary'])) {
+      $response->addCommand(new InvokeCommand(
+        'textarea[name="body[0][summary]"]',
+        'val',
+        [$summary]
+      ));
+    }
+    elseif (isset($form['field_summary']['widget'][0]['value'])) {
+      $response->addCommand(new InvokeCommand(
+        'textarea[name="field_summary[0][value]"]',
+        'val',
+        [$summary]
+      ));
+    }
+
+    $response->addCommand(new MessageCommand(
+      t('Summary generated successfully!'),
+      NULL,
+      ['type' => 'status']
+    ));
+
+  }
+  catch (\Exception $e) {
+    $response->addCommand(new AlertCommand(
+      t('Error generating summary: @error', ['@error' => $e->getMessage()])
+    ));
+  }
+
+  return $response;
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function ai_content_summary_entity_presave(EntityInterface $entity) {
+  if ($entity->getEntityTypeId() === 'node') {
+    $config = \Drupal::config('ai_content_summary.settings');
+
+    // Check if auto-generation is enabled.
+    if (!$config->get('auto_generate_summary')) {
+      return;
+    }
+
+    $enabled_types = $config->get('enabled_types') ?? [];
+    $bundle = $entity->bundle();
+
+    // Check if this content type is enabled.
+    if (!isset($enabled_types[$bundle]) || !$enabled_types[$bundle]) {
+      return;
+    }
+
+    // Only regenerate if body/summary fields are empty or
+    // if content changed significantly.
+    $body_field = NULL;
+
+    // Determine which fields to use.
+    if ($entity->hasField('body')) {
+      $body_field = 'body';
+    }
+    elseif ($entity->hasField('field_summary')) {
+      $body_field = 'field_summary';
+    }
+
+    if ($body_field && $entity->hasField($body_field)) {
+      $body_value = $entity->get($body_field)->value;
+
+      // Skip if body is empty.
+      if (empty(trim(strip_tags($body_value)))) {
+        return;
+      }
+
+      // Check if summary is empty or needs regeneration.
+      $summary_value = '';
+      if ($entity->hasField('field_summary')) {
+        $summary_value = $entity->get('field_summary')->value;
+      }
+      elseif ($entity->get($body_field)->summary) {
+        $summary_value = $entity->get($body_field)->summary;
+      }
+
+      // Generate new summary only if empty.
+      if (empty(trim($summary_value))) {
+        try {
+          $ai_service = \Drupal::service('ai_content_summary.service');
+          $clean_content = $ai_service->cleanText($body_value);
+
+          $new_summary = $ai_service->generateSummary(
+            $clean_content,
+            $config->get('max_length') ?? 150,
+            $config->get('min_length') ?? 50
+          );
+
+          if ($entity->hasField('field_summary')) {
+            $entity->set('field_summary', $new_summary);
+          }
+          elseif ($entity->get($body_field)->summary !== NULL) {
+            $entity->get($body_field)->summary = $new_summary;
+          }
+
+        }
+        catch (\Exception $e) {
+          \Drupal::logger('ai_content_summary')->error(
+            'Failed to generate summary for node @nid: @error',
+            ['@nid' => $entity->id(), '@error' => $e->getMessage()]
+                  );
+        }
+      }
+    }
+  }
+}

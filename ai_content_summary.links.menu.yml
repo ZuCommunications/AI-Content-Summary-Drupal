@@ -1,0 +1,6 @@
+ai_content_summary.settings:
+  title: 'AI Content Summary'
+  description: 'Configure AI-powered content summary generation settings.'
+  route_name: ai_content_summary.settings
+  parent: ai.admin_settings
+  weight: 10

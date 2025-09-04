@@ -1,0 +1,15 @@
+ai_content_summary.settings:
+  path: '/admin/config/content/ai-content-summary'
+  defaults:
+    _form: '\Drupal\ai_content_summary\Form\AiContentSummarySettingsForm'
+    _title: 'AI Content Summary Settings'
+  requirements:
+    _permission: 'administer ai content summary'
+
+ai_content_summary.generate:
+  path: '/ai-content-summary/generate'
+  defaults:
+    _controller: '\Drupal\ai_content_summary\Controller\AiContentSummaryController::generateSummary'
+    _title: 'Generate AI Summary'
+  requirements:
+    _permission: 'generate ai summaries'

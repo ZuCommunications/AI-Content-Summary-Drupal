@@ -1,0 +1,7 @@
+administer ai content summary:
+  title: 'Administer AI Content Summary'
+  description: 'Configure AI Content Summary settings and API credentials.'
+
+generate ai summaries:
+  title: 'Generate AI summaries'
+  description: 'Generate AI-powered summaries for content.'

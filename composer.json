@@ -1,0 +1,32 @@
+{
+  "name": "zu/ai-content-summary",
+  "description": "Automatically generate summaries for Drupal content nodes using the AI core module.",
+  "type": "drupal-module",
+  "license": "MIT",
+  "keywords": [
+    "drupal",
+    "ai",
+    "summary",
+    "content"
+  ],
+  "homepage": "https://github.com/tanmaypathak/ai_content_summary",
+  "authors": [
+    {
+      "name": "Tanmay Pathak",
+      "homepage": "https://tanmaypathak.com"
+    }
+  ],
+  "support": {
+    "source": "https://github.com/tanmaypathak/ai_content_summary",
+    "issues": "https://github.com/tanmaypathak/ai_content_summary/issues"
+  },
+  "extra": {
+    "installer-name": "ai_content_summary",
+    "branch-alias": {
+      "dev-main": "1.x-dev"
+    }
+  },
+  "require": {
+    "drupal/ai": "^1.0"
+  }
+}

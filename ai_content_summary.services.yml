@@ -1,0 +1,4 @@
+services:
+  ai_content_summary.service:
+    class: Drupal\ai_content_summary\Service\AiSummaryService
+    arguments: ['@config.factory', '@ai.provider']
