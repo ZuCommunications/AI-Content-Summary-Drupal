@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains the AI summary service.
+ */
+
 namespace Drupal\ai_content_summary\Service;
 
 use Drupal\ai\AiProviderPluginManager;
@@ -49,7 +54,7 @@ class AiSummaryService {
    *   Minimum length of summary.
    *
    * @return string
-   *   The generated summary
+   *   The generated summary.
    *
    * @throws \Exception
    *   If the API request fails.
@@ -94,7 +99,7 @@ class AiSummaryService {
    *   Raw text to clean.
    *
    * @return string
-   *   Cleaned text
+   *   Cleaned text.
    */
   public function cleanText(string $text): string {
     // Remove HTML tags.

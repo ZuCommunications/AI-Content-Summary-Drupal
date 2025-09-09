@@ -1,19 +1,26 @@
+/**
+ * Handles frontend summary generation for the AI Content Summary module.
+ */
 (function ($, Drupal, drupalSettings) {
   'use strict';
+
+  /**
+   * Attaches behavior for generating summaries through AJAX.
+   */
 
   Drupal.behaviors.aiContentSummary = {
     attach: function (context, settings) {
       $('.ai-summary-generate-button', context)
         .once('ai-summary-button')
         .each(function () {
-          var $button = $(this);
-          var fieldName = $button.data('field-name');
+          const $button = $(this);
+          const fieldName = $button.data('field-name');
 
           $button.on('click', function (e) {
             e.preventDefault();
 
-            var content = '';
-            var summaryField = '';
+            let content = '';
+            let summaryField = '';
 
             // Find the appropriate content field
             if (fieldName === 'body') {
@@ -39,9 +46,9 @@
             $button.prop('disabled', true).val(Drupal.t('Generating...'));
 
             // Get configuration
-            var config = settings.aiContentSummary || {};
-            var maxLength = config.maxLength || 150;
-            var minLength = config.minLength || 50;
+            const config = settings.aiContentSummary || {};
+            const maxLength = config.maxLength || 150;
+            const minLength = config.minLength || 50;
 
             // Make AJAX request
             $.ajax({
@@ -81,14 +88,22 @@
         });
     },
 
+    /**
+     * Display a temporary message on the page.
+     *
+     * @param {string} message
+     *   The message to show.
+     * @param {string} type
+     *   The Drupal message type.
+     */
     showMessage: function (message, type) {
-      var $message = $(
+      const $message = $(
         '<div class="messages messages--' + type + '">' + message + '</div>'
       );
       $('.region-content').prepend($message);
 
-      setTimeout(function () {
-        $message.fadeOut(function () {
+      setTimeout(() => {
+        $message.fadeOut(() => {
           $message.remove();
         });
       }, 3000);
