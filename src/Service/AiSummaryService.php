@@ -80,11 +80,6 @@ class AiSummaryService {
       $response = $provider->chat($messages, $settings['model_id'])->getNormalized();
       $summary = $response->getText();
 
-      // Ensure summary is within length limits.
-      if (strlen($summary) > $max_length) {
-        $summary = substr($summary, 0, $max_length - 3) . '...';
-      }
-
       return trim($summary);
     }
     catch (\Exception $e) {
