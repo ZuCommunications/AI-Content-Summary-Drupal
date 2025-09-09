@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains the controller for AJAX summary generation.
+ */
+
 namespace Drupal\ai_content_summary\Controller;
 
 use Drupal\ai_content_summary\Service\AiSummaryService;
@@ -45,7 +50,7 @@ class AiContentSummaryController extends ControllerBase {
    *   The request object.
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
-   *   JSON response with summary
+   *   JSON response with summary.
    */
   public function generateSummary(Request $request) {
     $text = $request->request->get('text');

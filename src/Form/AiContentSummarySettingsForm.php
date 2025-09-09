@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Settings form for the AI Content Summary module.
+ */
+
 namespace Drupal\ai_content_summary\Form;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
