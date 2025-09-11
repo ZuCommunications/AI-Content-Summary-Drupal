@@ -109,34 +109,22 @@ function ai_content_summary_form_alter(array &$form, FormStateInterface $form_st
 function ai_content_summary_generate_summary_ajax(array &$form, FormStateInterface $form_state) {
   $response = new AjaxResponse();
 
-  // Build a clone of the node updated with current (unsaved) form values.
+  // Get the node entity without trying to extract problematic form values.
   $form_object = $form_state->getFormObject();
   if (!$form_object || !method_exists($form_object, 'getEntity')) {
     $response->addCommand(new AlertCommand(t('Unable to obtain the node for summarization.')));
     return $response;
   }
-  /** @var \Drupal\node\NodeInterface $node */
-  $node = clone $form_object->getEntity();
   
-  // Try to extract form values safely.
-  try {
-    \Drupal::service('entity_display.repository')
-      ->getFormDisplay('node', $node->bundle(), 'default')
-      ->extractFormValues($node, $form, $form_state);
-  }
-  catch (\Exception $e) {
-    // If extractFormValues fails, continue with existing entity content.
-    // The view mode approach will handle whatever content is available.
-    \Drupal::logger('ai_content_summary')->warning(
-      'Form extraction failed, proceeding with existing entity content: @error',
-      ['@error' => $e->getMessage()]
-    );
-  }
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $form_object->getEntity();
 
-  // Pull full content via view mode.
+  // Pull full content via view mode using existing entity content.
+  // Note: This uses the currently saved content, not unsaved form values.
+  // Users should save their content first if they want the latest changes summarized.
   $content = _ai_content_summary_source_text_from_view_mode($node, 'ai_summary_source');
   if (trim($content) === '') {
-    $response->addCommand(new AlertCommand(t('No content found to summarize.')));
+    $response->addCommand(new AlertCommand(t('No content found to summarize. Please save your content first, then generate a summary.')));
     return $response;
   }
 
