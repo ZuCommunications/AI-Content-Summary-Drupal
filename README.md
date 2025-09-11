@@ -5,7 +5,6 @@ Generate content summaries in Drupal using providers from the AI module.
 ## Features
 - Button on node forms to request an AI summary.
 - Works with any AI provider configured in the AI module.
-- Optional automatic generation when the summary field is empty.
 - Configurable prompt and summary length.
 - Supports body summaries or custom summary fields.
 
@@ -20,14 +19,13 @@ Generate content summaries in Drupal using providers from the AI module.
 
 ## Usage
 - On enabled content types, click **Generate AI Summary** to fill the summary field.
-- Enable automatic generation to create a summary on save when the field is empty.
 
 ## Permissions
 - **Administer AI Content Summary**
 - **Generate AI summaries**
 
 ## Configuration
-Choose the prompt, min/max length, auto-generation, and allowed content types.
+Choose the prompt, min/max length, view mode, and allowed content types.
 
 ## License
 Licensed under the MIT License. See the `LICENSE` file for details.

@@ -63,12 +63,8 @@ function ai_content_summary_form_alter(array &$form, FormStateInterface $form_st
     }
 
     if (!empty($node_type) && isset($enabled_types[$node_type]) && $enabled_types[$node_type] && \Drupal::currentUser()->hasPermission('generate ai summaries')) {
-      $auto_generate_enabled = $config->get('auto_generate_summary') ?? FALSE;
-
-      // Create help text based on auto-generation setting.
-      $help_text = $auto_generate_enabled
-        ? t('AI will automatically generate a summary when this field is empty and content is saved.')
-        : t('Use the "Generate AI Summary" button to create a summary, or manually enter one. Automatic generation is disabled.');
+      // Create help text for manual generation.
+      $help_text = t('Use the "Generate AI Summary" button to create a summary, or manually enter one.');
 
       // Check for body field with summary.
       if (isset($form['body']['widget'][0]['summary'])) {
@@ -178,71 +174,3 @@ function ai_content_summary_generate_summary_ajax(array &$form, FormStateInterfa
   return $response;
 }
 
-/**
- * Implements hook_entity_presave().
- *
- * Generates a summary before saving the node when the field is empty.
- *
- * @param \Drupal\Core\Entity\EntityInterface $entity
- *   The entity being saved.
- */
-function ai_content_summary_entity_presave(EntityInterface $entity) {
-  if ($entity->getEntityTypeId() !== 'node') {
-    return;
-  }
-
-  $config = \Drupal::config('ai_content_summary.settings');
-  if (!$config->get('auto_generate_summary')) {
-    return;
-  }
-
-  $enabled_types = $config->get('enabled_types') ?? [];
-  if (empty($enabled_types[$entity->bundle()])) {
-    return;
-  }
-
-  // Decide destination for the summary.
-  $write_to_field = $entity->hasField('field_summary') ? 'field_summary' : ( $entity->hasField('body') ? 'body' : NULL );
-  if (!$write_to_field) {
-    return;
-  }
-
-  // If a summary already exists, skip.
-  $has_summary =
-    $write_to_field === 'field_summary'
-      ? !$entity->get('field_summary')->isEmpty()
-      : (bool) $entity->get('body')->summary;
-
-  if ($has_summary) {
-    return;
-  }
-
-  // Get full content via view mode.
-  $content = _ai_content_summary_source_text_from_view_mode($entity);
-  if (trim($content) === '') {
-    return;
-  }
-
-  try {
-    $ai_service = \Drupal::service('ai_content_summary.service');
-    $clean = $ai_service->cleanText($content);
-    $summary = $ai_service->generateSummary(
-      $clean,
-      $config->get('max_length') ?? 150,
-      $config->get('min_length') ?? 50
-    );
-
-    if ($write_to_field === 'field_summary') {
-      $entity->set('field_summary', $summary);
-    }
-    else {
-      $entity->get('body')->summary = $summary;
-    }
-  }
-  catch (\Exception $e) {
-    \Drupal::logger('ai_content_summary')->error('Failed to generate summary for node @nid: @error', [
-      '@nid' => $entity->id(),
-      '@error' => $e->getMessage(),
-    ]);
-  }
-}

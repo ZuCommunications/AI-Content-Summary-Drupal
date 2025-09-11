@@ -111,13 +111,6 @@ class AiContentSummarySettingsForm extends ConfigFormBase {
       '#size' => 30,
     ];
 
-    $form['summary']['auto_generate_summary'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Automatically generate summary when empty'),
-      '#default_value' => $config->get('auto_generate_summary') ?? FALSE,
-      '#description' => $this->t('Automatically generate summaries for new content or when the summary field is empty.'),
-    ];
-
     $form['content_types'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Content Types'),
@@ -153,7 +146,6 @@ class AiContentSummarySettingsForm extends ConfigFormBase {
       ->set('max_length', $form_state->getValue('max_length'))
       ->set('min_length', $form_state->getValue('min_length'))
       ->set('view_mode', $form_state->getValue('view_mode'))
-      ->set('auto_generate_summary', $form_state->getValue('auto_generate_summary'))
       ->set('enabled_types', array_filter($form_state->getValue('enabled_types')))
       ->save();
 

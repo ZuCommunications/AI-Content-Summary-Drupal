@@ -1,6 +1,6 @@
 {
   "name": "zu/ai-content-summary",
-  "description": "Automatically generate summaries for Drupal content nodes using the AI core module.",
+  "description": "Generate summaries for Drupal content nodes using the AI core module.",
   "type": "drupal-module",
   "license": "MIT",
   "keywords": [
