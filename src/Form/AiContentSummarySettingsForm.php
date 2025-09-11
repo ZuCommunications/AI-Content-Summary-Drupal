@@ -102,6 +102,15 @@ class AiContentSummarySettingsForm extends ConfigFormBase {
       '#max' => 2000,
     ];
 
+    $form['summary']['view_mode'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('View Mode for Content Extraction'),
+      '#default_value' => $config->get('view_mode') ?? 'ai_summary_source',
+      '#description' => $this->t('The view mode to use when extracting content for summarization. Create a custom view mode (e.g., "ai_summary_source") and configure it to include only the fields you want summarized. You can also use existing view modes like "teaser" or "full".'),
+      '#required' => TRUE,
+      '#size' => 30,
+    ];
+
     $form['summary']['auto_generate_summary'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Automatically generate summary when empty'),
@@ -143,6 +152,7 @@ class AiContentSummarySettingsForm extends ConfigFormBase {
       ->set('prompt', $form_state->getValue('prompt'))
       ->set('max_length', $form_state->getValue('max_length'))
       ->set('min_length', $form_state->getValue('min_length'))
+      ->set('view_mode', $form_state->getValue('view_mode'))
       ->set('auto_generate_summary', $form_state->getValue('auto_generate_summary'))
       ->set('enabled_types', array_filter($form_state->getValue('enabled_types')))
       ->save();
