@@ -70,13 +70,12 @@ function ai_content_summary_form_alter(array &$form, FormStateInterface $form_st
         ? t('AI will automatically generate a summary when this field is empty and content is saved.')
         : t('Use the "Generate AI Summary" button to create a summary, or manually enter one. Automatic generation is disabled.');
 
-      if (isset($form['body'])) {
+      // Check for body field with summary.
+      if (isset($form['body']['widget'][0]['summary'])) {
         $form['body']['widget'][0]['#attached']['library'][] = 'ai_content_summary/summary-generator';
 
         // Add help text to the body summary field.
-        if (isset($form['body']['widget'][0]['summary'])) {
-          $form['body']['widget'][0]['summary']['#description'] = $help_text;
-        }
+        $form['body']['widget'][0]['summary']['#description'] = $help_text;
 
         // Add summary generation button.
         $form['body']['widget'][0]['summary_generation'] = [
@@ -90,6 +89,29 @@ function ai_content_summary_form_alter(array &$form, FormStateInterface $form_st
           '#ajax' => [
             'callback' => 'ai_content_summary_generate_summary_ajax',
             'wrapper' => 'edit-body-0-summary',
+          ],
+        ];
+      }
+      
+      // Check for dedicated summary field.
+      if (isset($form['field_summary']['widget'][0]['value'])) {
+        $form['field_summary']['widget'][0]['#attached']['library'][] = 'ai_content_summary/summary-generator';
+
+        // Add help text to the summary field.
+        $form['field_summary']['widget'][0]['value']['#description'] = $help_text;
+
+        // Add summary generation button.
+        $form['field_summary']['widget'][0]['summary_generation'] = [
+          '#type' => 'button',
+          '#value' => t('Generate AI Summary'),
+          '#attributes' => [
+            'class' => ['ai-summary-generate-button'],
+            'data-field-name' => 'field_summary',
+          ],
+          '#limit_validation_errors' => [],
+          '#ajax' => [
+            'callback' => 'ai_content_summary_generate_summary_ajax',
+            'wrapper' => 'edit-field-summary-0-value',
           ],
         ];
       }
