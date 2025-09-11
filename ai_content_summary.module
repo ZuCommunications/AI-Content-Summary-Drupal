@@ -64,7 +64,7 @@ function ai_content_summary_form_alter(array &$form, FormStateInterface $form_st
 
     if (!empty($node_type) && isset($enabled_types[$node_type]) && $enabled_types[$node_type] && \Drupal::currentUser()->hasPermission('generate ai summaries')) {
       // Create help text for manual generation.
-      $help_text = t('Use the "Generate AI Summary" button to create a summary, or manually enter one.');
+      $help_text = t('Use the "Generate AI Summary" button to create a summary, or manually enter one. Note: The node must be saved first before generating an AI summary as it uses the saved content, not unsaved form changes.');
 
       // Check for body field with summary.
       if (isset($form['body']['widget'][0]['summary'])) {
