@@ -1,21 +1,21 @@
 ai_content_summary.settings:
   type: config_object
-  label: 'AI Content Summary settings'
+  label: "AI Content Summary settings"
   mapping:
     prompt:
       type: text
-      label: 'AI Summary Prompt'
+      label: "AI Summary Prompt"
     max_length:
       type: integer
-      label: 'Maximum Summary Length'
+      label: "Maximum Summary Length"
     min_length:
       type: integer
-      label: 'Minimum Summary Length'
-    auto_generate_summary:
-      type: boolean
-      label: 'Automatically generate summary when empty'
+      label: "Minimum Summary Length"
+    view_mode:
+      type: string
+      label: "View Mode for Content Extraction"
     enabled_types:
       type: sequence
-      label: 'Enabled Content Types'
+      label: "Enabled Content Types"
       sequence:
         type: string
