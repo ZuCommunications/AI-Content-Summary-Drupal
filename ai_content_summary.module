@@ -117,9 +117,21 @@ function ai_content_summary_generate_summary_ajax(array &$form, FormStateInterfa
   }
   /** @var \Drupal\node\NodeInterface $node */
   $node = clone $form_object->getEntity();
-  \Drupal::service('entity_display.repository')
-    ->getFormDisplay('node', $node->bundle(), 'default')
-    ->extractFormValues($node, $form, $form_state);
+  
+  // Try to extract form values safely.
+  try {
+    \Drupal::service('entity_display.repository')
+      ->getFormDisplay('node', $node->bundle(), 'default')
+      ->extractFormValues($node, $form, $form_state);
+  }
+  catch (\Exception $e) {
+    // If extractFormValues fails, continue with existing entity content.
+    // The view mode approach will handle whatever content is available.
+    \Drupal::logger('ai_content_summary')->warning(
+      'Form extraction failed, proceeding with existing entity content: @error',
+      ['@error' => $e->getMessage()]
+    );
+  }
 
   // Pull full content via view mode.
   $content = _ai_content_summary_source_text_from_view_mode($node, 'ai_summary_source');
