@@ -6,8 +6,12 @@
 
   /**
    * Attaches behavior for generating summaries through AJAX.
+   *
+   * @param {HTMLElement} context
+   *   The current DOM context.
+   * @param {object} settings
+   *   Drupal settings for the page.
    */
-
   Drupal.behaviors.aiContentSummary = {
     attach: function (context, settings) {
       $('.ai-summary-generate-button', context)
