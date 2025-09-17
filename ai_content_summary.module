@@ -3,6 +3,9 @@
 /**
  * @file
  * Provides hook implementations for the AI Content Summary module.
+ *
+ * This module provides AI-powered content summarization functionality
+ * for Drupal nodes with configurable field targeting.
  */
 
 use Drupal\Core\Ajax\MessageCommand;
@@ -23,11 +26,12 @@ use Drupal\Component\Render\PlainTextOutput;
  * @return string
  *   The plain text content of the rendered node using the configured view mode.
  */
-function _ai_content_summary_source_text_from_view_mode(NodeInterface $node) {
+function _ai_content_summary_source_text_from_view_mode(NodeInterface $node)
+{
   // Get view mode from configuration.
   $config = \Drupal::config('ai_content_summary.settings');
   $view_mode = $config->get('view_mode') ?? 'ai_summary_source';
-  
+
   $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
   $build = $view_builder->view($node, $view_mode);
   $html = (string) \Drupal::service('renderer')->renderPlain($build);
@@ -46,7 +50,8 @@ function _ai_content_summary_source_text_from_view_mode(NodeInterface $node) {
  * @param string $form_id
  *   The form identifier.
  */
-function ai_content_summary_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+function ai_content_summary_form_alter(array &$form, FormStateInterface $form_state, $form_id)
+{
   $config = \Drupal::config('ai_content_summary.settings');
   $enabled_types = $config->get('enabled_types') ?? [];
 
@@ -57,8 +62,7 @@ function ai_content_summary_form_alter(array &$form, FormStateInterface $form_st
     $node_type = '';
     if (preg_match('/^node_(.+?)_edit_form$/', $form_id, $matches)) {
       $node_type = $matches[1];
-    }
-    elseif (preg_match('/^node_(.+?)_form$/', $form_id, $matches)) {
+    } elseif (preg_match('/^node_(.+?)_form$/', $form_id, $matches)) {
       $node_type = $matches[1];
     }
 
@@ -66,8 +70,31 @@ function ai_content_summary_form_alter(array &$form, FormStateInterface $form_st
       // Create help text for manual generation.
       $help_text = t('Use the "Generate AI Summary" button to create a summary, or manually enter one. Note: The node must be saved first before generating an AI summary as it uses the saved content, not unsaved form changes.');
 
-      // Check for body field with summary.
-      if (isset($form['body']['widget'][0]['summary'])) {
+      // Prioritize dedicated summary field over body field with summary.
+      // Only show one Generate AI Summary button.
+      if (isset($form['field_summary']['widget'][0]['value'])) {
+        // Dedicated summary field takes priority.
+        $form['field_summary']['widget'][0]['#attached']['library'][] = 'ai_content_summary/summary-generator';
+
+        // Add help text to the summary field.
+        $form['field_summary']['widget'][0]['value']['#description'] = $help_text;
+
+        // Add summary generation button.
+        $form['field_summary']['widget'][0]['summary_generation'] = [
+          '#type' => 'button',
+          '#value' => t('Generate AI Summary'),
+          '#attributes' => [
+            'class' => ['ai-summary-generate-button'],
+            'data-field-name' => 'field_summary',
+          ],
+          '#limit_validation_errors' => [],
+          '#ajax' => [
+            'callback' => 'ai_content_summary_generate_summary_ajax',
+            'wrapper' => 'edit-field-summary-0-value',
+          ],
+        ];
+      } elseif (isset($form['body']['widget'][0]['summary'])) {
+        // Fallback to body field with summary if dedicated field not present.
         $form['body']['widget'][0]['#attached']['library'][] = 'ai_content_summary/summary-generator';
 
         // Add help text to the body summary field.
@@ -88,29 +115,6 @@ function ai_content_summary_form_alter(array &$form, FormStateInterface $form_st
           ],
         ];
       }
-      
-      // Check for dedicated summary field.
-      if (isset($form['field_summary']['widget'][0]['value'])) {
-        $form['field_summary']['widget'][0]['#attached']['library'][] = 'ai_content_summary/summary-generator';
-
-        // Add help text to the summary field.
-        $form['field_summary']['widget'][0]['value']['#description'] = $help_text;
-
-        // Add summary generation button.
-        $form['field_summary']['widget'][0]['summary_generation'] = [
-          '#type' => 'button',
-          '#value' => t('Generate AI Summary'),
-          '#attributes' => [
-            'class' => ['ai-summary-generate-button'],
-            'data-field-name' => 'field_summary',
-          ],
-          '#limit_validation_errors' => [],
-          '#ajax' => [
-            'callback' => 'ai_content_summary_generate_summary_ajax',
-            'wrapper' => 'edit-field-summary-0-value',
-          ],
-        ];
-      }
     }
   }
 }
@@ -126,7 +130,8 @@ function ai_content_summary_form_alter(array &$form, FormStateInterface $form_st
  * @return \Drupal\Core\Ajax\AjaxResponse
  *   The AJAX response containing a summary or error message.
  */
-function ai_content_summary_generate_summary_ajax(array &$form, FormStateInterface $form_state) {
+function ai_content_summary_generate_summary_ajax(array &$form, FormStateInterface $form_state)
+{
   $response = new AjaxResponse();
 
   // Get the node entity without trying to extract problematic form values.
@@ -135,7 +140,7 @@ function ai_content_summary_generate_summary_ajax(array &$form, FormStateInterfa
     $response->addCommand(new AlertCommand(t('Unable to obtain the node for summarization.')));
     return $response;
   }
-  
+
   /** @var \Drupal\node\NodeInterface $node */
   $node = $form_object->getEntity();
 
@@ -158,19 +163,16 @@ function ai_content_summary_generate_summary_ajax(array &$form, FormStateInterfa
       $config->get('min_length')
     );
 
-    // Write into field_summary or body summary, as you already do.
-    if (isset($form['body']['widget'][0]['summary'])) {
-      $response->addCommand(new InvokeCommand('textarea[name="body[0][summary]"]', 'val', [$summary]));
-    }
-    elseif (isset($form['field_summary']['widget'][0]['value'])) {
+    // Write into the prioritized field (dedicated summary field takes priority).
+    if (isset($form['field_summary']['widget'][0]['value'])) {
       $response->addCommand(new InvokeCommand('textarea[name="field_summary[0][value]"]', 'val', [$summary]));
+    } elseif (isset($form['body']['widget'][0]['summary'])) {
+      $response->addCommand(new InvokeCommand('textarea[name="body[0][summary]"]', 'val', [$summary]));
     }
 
     $response->addCommand(new MessageCommand(t('Summary generated successfully!'), NULL, ['type' => 'status']));
-  }
-  catch (\Exception $e) {
+  } catch (\Exception $e) {
     $response->addCommand(new AlertCommand(t('Error generating summary: @error', ['@error' => $e->getMessage()])));
   }
   return $response;
 }
-
