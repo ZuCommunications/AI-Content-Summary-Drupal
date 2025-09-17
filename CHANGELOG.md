@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/ZuCommunications/AI-Content-Summary-Drupal/compare/v2.0.0...v2.1.0) (2025-09-17)
+
+
+### Features
+
+* :sparkles: prioritize summary field for adding button and saving summary ([#8](https://github.com/ZuCommunications/AI-Content-Summary-Drupal/issues/8)) ([2de0c7c](https://github.com/ZuCommunications/AI-Content-Summary-Drupal/commit/2de0c7c0f07d5a89affd1a584ab179e198d7b3cc))
+
 ## [2.0.0](https://github.com/ZuCommunications/AI-Content-Summary-Drupal/compare/v1.0.1...v2.0.0) (2025-09-11)
 
 
