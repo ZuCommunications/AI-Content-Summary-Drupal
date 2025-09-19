@@ -31,7 +31,7 @@ Generate content summaries in Drupal using providers from the AI module.
 3. Enable the module:
 
    ```bash
-   lando drush en ai-content-summary
+   lando drush en ai_content_summary
    ```
 
 4. Configure at `/admin/config/content/ai-content-summary`.
