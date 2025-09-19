@@ -13,9 +13,28 @@ Generate content summaries in Drupal using providers from the AI module.
 - [AI module](https://www.drupal.org/project/ai) with a chat-capable provider.
 
 ## Installation
-1. Copy the module to `web/modules/custom/`.
-2. Enable with `drush en ai_content_summary`.
-3. Configure at `/admin/config/content/ai-content-summary`.
+1. Add this repository to the `repositories` section of your project's `composer.json`:
+
+   ```json
+   {
+     "type": "vcs",
+     "url": "https://github.com/tanmay-pathak/AI-Content-Summary-Drupal.git"
+   }
+   ```
+
+2. Require the module with Composer:
+
+   ```bash
+   lando composer require 'zu/ai-content-summary'
+   ```
+
+3. Enable the module:
+
+   ```bash
+   lando drush en ai-content-summary
+   ```
+
+4. Configure at `/admin/config/content/ai-content-summary`.
 
 ## Usage
 Once configured, the module adds a **Generate AI Summary** button to the edit forms of
