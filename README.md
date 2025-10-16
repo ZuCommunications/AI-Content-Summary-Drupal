@@ -2,6 +2,8 @@
 
 Generate content summaries in Drupal using providers from the AI module.
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ZuCommunications/AI-Content-Summary-Drupal)
+
 ## Features
 - Button on node forms to request an AI summary.
 - Works with any AI provider configured in the AI module.
