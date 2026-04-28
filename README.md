@@ -20,7 +20,7 @@ Generate content summaries in Drupal using providers from the AI module.
    ```json
    {
      "type": "vcs",
-     "url": "https://github.com/tanmay-pathak/AI-Content-Summary-Drupal.git"
+     "url": "https://github.com/ZuCommunications/AI-Content-Summary-Drupal.git"
    }
    ```
 
